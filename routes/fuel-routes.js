@@ -1,9 +1,15 @@
 const express = require('express');
+const { check } = require('express-validator');
+
 const router = express.Router();
 
 const fuelController = require('../controllers/fuel-controller');
 
-router.get('/fuel', fuelController.getFuelData);
-router.post('/addFuel', fuelController.addFuelExpense);
+router.get('/getFuel/:user', fuelController.getFuelData);
+router.post(
+  '/addFuel',
+  check('money').not().isEmpty(),
+  fuelController.addFuelExpense
+);
 
 module.exports = router;

@@ -1,3 +1,8 @@
+const { validationResult } = require('express-validator');
+
+const HttpError = require('../models/http-error');
+const FuelExpense = require('../models/fuel');
+
 let DUMMY_FUEL = [
   {
     id: 'f1',
@@ -29,25 +34,48 @@ let DUMMY_FUEL = [
   },
 ];
 
-const getFuelData = (req, res, next) => {
-  console.log('get request in fuel');
-  console.log(`req.params`, req.params);
-  res.json(DUMMY_FUEL);
+const getFuelData = async (req, res, next) => {
+  const user = req.params.user;
+
+  let fuelForUser;
+  try {
+    fuelForUser = await FuelExpense.find({ user });
+    // console.log(fuelForUser);
+  } catch (err) {
+    const error = new HttpError('Fetching Fuel Data Failed', 500);
+    return next(error);
+  }
+
+  res.json({
+    fuelForUser: fuelForUser.map((data) => data.toObject({ getters: true })),
+  });
 };
 
-const addFuelExpense = (req, res, next) => {
-  const { money, description, user } = req.body;
+const addFuelExpense = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    throw new Error('Invalid inputs passed, please check the data');
+  }
 
-  const date = Date.now();
+  const { date, money, description, user } = req.body;
+  // const date = Date.now();
 
-  const fuelExpense = {
+  const fuelExpense = new FuelExpense({
     date,
     money,
     description,
     user,
-  };
-
-  DUMMY_FUEL.push(fuelExpense);
+  });
+  try {
+    await fuelExpense.save();
+  } catch (err) {
+    const error = new HttpError(
+      'Adding one more Expense failed, please try again later',
+      500
+    );
+    return next(error);
+  }
 
   res.status(201).json({ fuelExpense });
 };

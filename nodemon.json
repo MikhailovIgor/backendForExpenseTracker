@@ -1,0 +1,7 @@
+{
+  "env": {
+    "DB_USER": "igor",
+    "DB_PASSWORD": "mikhailov86",
+    "DB_NAME": "expenseTracker"
+  }
+}
